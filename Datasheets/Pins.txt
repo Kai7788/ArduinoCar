@@ -1,0 +1,29 @@
+LineTracking:
+10 -> Rechts -> Input
+4 -> Mitte -> Input
+2 -> Links-> Input
+
+Servo:
+3 -> Output
+
+L298N_Control / H-Bruecke:
+6 -> Enable A
+11 -> In 1
+9 -> In 2
+
+8 -> In 3
+7 -> In 4
+5 -> Enable B
+
+UltraSonic Sensor:
+
+A5 -> Trigger / Send
+A4 -> Echo / Receive
+
+InfraRed:
+12
+
+BlueTooth:
+
+0 -> Rx
+1 -> Tx
