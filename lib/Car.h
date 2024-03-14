@@ -12,14 +12,13 @@
 class Car : IDrivable
         {
 public:
-    String mode;
+    String mode{};
     SuperSonic sonic_sensor;
     ServoMotor servo_motor;
 
-
-
-    Car(){
+    explicit Car(Servo new_servo){
         mode = "none";
+        this->servo_motor.set_servo(new_servo);
     }
 
 private:

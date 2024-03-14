@@ -9,7 +9,6 @@
 class SuperSonic{
 public:
     float get_distance(){
-        float duration;
         digitalWrite(ul_sonic_trig, LOW);
         delayMicroseconds(2);
         digitalWrite(ul_sonic_trig, HIGH);
