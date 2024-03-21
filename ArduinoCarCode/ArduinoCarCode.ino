@@ -18,6 +18,7 @@
 #define bt_rx 0
 #define bt_tx 1
 #define bt_modul SoftwareSerial(bt_rx,bt_tx)
+int ls_rechts, ls_links, ls_mitte = 0;
 
 class Hbridge{
   // Speed kann zwischen 0 und 255 sein 0 => min; 255 => max
@@ -49,15 +50,15 @@ class Hbridge{
 };
 class LineTracking{
 
-  int * get_sensor_vals(){
-    // Links, Mitte, Rechts
-    int sensor_daten[3] = {
-      digitalRead(lt_links),
-      digitalRead(lt_mitte),
-      digitalRead(lt_rechts)
-    };
-    return sensor_daten;
-  }
+  public:
+    void get_sensor_vals(int &links,int &mitte,int &rechts){
+      // Links, Mitte, Rechts
+      links = !digitalRead(lt_links);
+      mitte = !digitalRead(lt_mitte);
+      rechts = !digitalRead(lt_rechts);
+      
+      return;
+    }
 };
 class IDrivable{
   public:
@@ -132,7 +133,8 @@ class Car : IDrivable {
     void start(){
       this->on_off = true;
       while(on_off){
-        drive("l");
+        //line_tracking_modul.get_sensor_vals(ls_links, ls_mitte, ls_rechts);
+        
       }
     }
 
