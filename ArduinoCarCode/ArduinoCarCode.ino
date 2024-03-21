@@ -47,7 +47,18 @@ class Hbridge{
     }
 
 };
+class LineTracking{
 
+  int * get_sensor_vals(){
+    // Links, Mitte, Rechts
+    int sensor_daten[3] = {
+      digitalRead(lt_links),
+      digitalRead(lt_mitte),
+      digitalRead(lt_rechts)
+    };
+    return sensor_daten;
+  }
+};
 class IDrivable{
   public:
       virtual ~IDrivable() = default;
@@ -109,7 +120,9 @@ class Car : IDrivable {
     SuperSonic sonic_sensor = SuperSonic();
     ServoMotor servo_motor = ServoMotor();
     Hbridge h_bruecke = Hbridge();
+    LineTracking line_tracking_modul = LineTracking();
     bool on_off = false;
+
 
     explicit Car(Servo new_servo) {
       mode = "none";
@@ -130,6 +143,8 @@ class Car : IDrivable {
       h_bruecke.drive_forward();
     }
   };
+
+
 
 
 Servo servo_motor;
