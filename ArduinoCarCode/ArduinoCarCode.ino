@@ -18,6 +18,7 @@
 #define bt_rx 0
 #define bt_tx 1
 #define bt_modul SoftwareSerial(bt_rx,bt_tx)
+int ls_rechts, ls_links, ls_mitte = 0;
 
 class Hbridge{
   // Speed kann zwischen 0 und 255 sein 0 => min; 255 => max
@@ -47,7 +48,18 @@ class Hbridge{
     }
 
 };
+class LineTracking{
 
+  public:
+    void get_sensor_vals(int &links,int &mitte,int &rechts){
+      // Links, Mitte, Rechts
+      links = !digitalRead(lt_links);
+      mitte = !digitalRead(lt_mitte);
+      rechts = !digitalRead(lt_rechts);
+      
+      return;
+    }
+};
 class IDrivable{
   public:
       virtual ~IDrivable() = default;
@@ -109,7 +121,9 @@ class Car : IDrivable {
     SuperSonic sonic_sensor = SuperSonic();
     ServoMotor servo_motor = ServoMotor();
     Hbridge h_bruecke = Hbridge();
+    LineTracking line_tracking_modul = LineTracking();
     bool on_off = false;
+
 
     explicit Car(Servo new_servo) {
       mode = "none";
@@ -119,7 +133,8 @@ class Car : IDrivable {
     void start(){
       this->on_off = true;
       while(on_off){
-        drive("l");
+        //line_tracking_modul.get_sensor_vals(ls_links, ls_mitte, ls_rechts);
+        
       }
     }
 
@@ -130,6 +145,8 @@ class Car : IDrivable {
       h_bruecke.drive_forward();
     }
   };
+
+
 
 
 Servo servo_motor;
