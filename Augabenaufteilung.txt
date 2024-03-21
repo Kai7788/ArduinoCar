@@ -1,0 +1,12 @@
+Ultraschall Sensor Programmieren: Jonas
+Servo Motor Programmieren: Kai
+H-Bruecke Programmieren: Jonas
+Bluetooth-Modul Programmieren: Kai
+Linien-Erkennung-Modul Programmieren: Kai
+Manuelles Fahren Programmieren: Jonas
+Automatisches Fahren mit Gegenstandserkennung: Kai
+Automatische Linienverfoglung Programmieren: Kai
+Kontroll Logik: Jonas
+Praesentation ca. 20 Seiten: 50/50
+Dokumentation min. 20 Seiten: 50/50
+ 

@@ -17,16 +17,16 @@
 #define infra_red 12
 #define bt_rx 0
 #define bt_tx 1
+#define bt_modul SoftwareSerial(bt_rx,bt_tx)
 
 class Hbridge{
+  // Speed kann zwischen 0 und 255 sein 0 => min; 255 => max
   public:
     void drive_forward(int speed = 200){
-      Serial.println("Hier");
+      analogWrite(h_br_en1, speed);
+      analogWrite(h_br_en2, speed);      
       motor_left_forward();
       motor_right_forward();
-
-      analogWrite(h_br_en1, speed);
-      analogWrite(h_br_en2, speed);
     }
 
 
@@ -34,14 +34,15 @@ class Hbridge{
   private:
 
     void motor_left_forward(){
+      //en1 pin 6
       digitalWrite(h_br_in1, HIGH);  // Motor 1 vor
       digitalWrite(h_br_in2, LOW);
 
     }
 
       void motor_right_forward(){
-      digitalWrite(h_br_in3, HIGH);  // Motor 1 vor
-      digitalWrite(h_br_in4, LOW);
+      digitalWrite(h_br_in3, LOW);  // Motor 1 vor
+      digitalWrite(h_br_in4, HIGH);
 
     }
 
@@ -107,8 +108,8 @@ class Car : IDrivable {
     String mode{};
     SuperSonic sonic_sensor = SuperSonic();
     ServoMotor servo_motor = ServoMotor();
-    SoftwareSerial bt_modul = SoftwareSerial(bt_rx,bt_tx);
     Hbridge h_bruecke = Hbridge();
+    bool on_off = false;
 
     explicit Car(Servo new_servo) {
       mode = "none";
@@ -123,7 +124,7 @@ class Car : IDrivable {
     }
 
   private:
-    bool on_off = false;
+    
 
     void drive(String direction) override {
       h_bruecke.drive_forward();
@@ -152,11 +153,14 @@ void setup() {
     pinMode(ul_sonic_echo, INPUT_PULLUP);
     pinMode(ul_sonic_trig, OUTPUT);
     servo_motor.attach(servo_out);
+    bt_modul.begin(9600);
 }
 
 void loop() {
   // put your main code here, to run repeatedly:
-
-  car.start();
+  if(!car.on_off){
+    car.start();
+  }
+  
 
 }
