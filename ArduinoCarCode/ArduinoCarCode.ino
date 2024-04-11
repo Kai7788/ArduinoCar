@@ -67,58 +67,97 @@ class IDrivable{
 
   };
 
-class ServoMotor{
-  private:
-      Servo servo;
-      int pos = 90; //Standard position 90 degrees
-
-
-  public:
-    boolean rotate = false;
-      void set_servo(Servo new_servo){
-          this->servo = new_servo;
-          servo.write(pos);
-      }
-      void start_rotate(int delay_time = 20){
-          this->rotate = true;
-          while(rotate){
-              Serial.println("servo start");
-              for(pos = 0; pos <= 180; pos++){
-                  servo.write(pos);
-                  delay(delay_time);
-              }
-              for(pos = 180; pos >= 0; pos--){
-                  servo.write(pos);
-                  delay(delay_time);
-              }
-          }
-      }
-      void stop(){
-          this->rotate = false;
-      }
-
-  };
-
 
 class SuperSonic{
 
   public:
-      float get_distance(){
+      int get_distance(){
+          //Returns the Distance in mm
           digitalWrite(ul_sonic_trig, LOW);
           delayMicroseconds(2);
           digitalWrite(ul_sonic_trig, HIGH);
           delayMicroseconds(10);
           digitalWrite(ul_sonic_trig, LOW);
-          return (pulseIn(ul_sonic_echo, HIGH) * 0.0343)/2;
+          unsigned long duration = pulseIn(ul_sonic_echo, HIGH);
+          return int((duration * 0.0343)/2);
       }
 
   };
 
 
+class ServoMotor{
+  private:
+      Servo servo;
+      int start_pos = 90; //Standard position 90 degrees
+      SuperSonic sonic_sensor = SuperSonic();
+      int min_pos = 30;
+      int max_pos = 150;
+      int pos = 90;
+      int** data_array;
+
+  public:
+      void set_servo(Servo new_servo){
+          this->servo = new_servo;
+          servo.write(start_pos);
+      }
+
+      int** get_cords(int delay_time = 20){
+        // Returns an Array with the cordinates exmp. [[80,40],[70,44],[60, 55]]
+        // Coardinate array -> Inner array [degrees, distance]
+        // Left is > 90 and right is < 90
+        int entries = 13;
+        int step = 0;
+        int** data_array = new int*[entries]; // Creates the outer array [12] with 12 spaces
+
+        for (int i = 0; i < entries; ++i) {
+          data_array[i] = new int[2];        // Creates the inner arrays [[2], [2], [2]...] -> [degrees, value]
+        }
+        if(pos < 90){
+          servo.write(30);
+          delay(delay_time*3);
+
+          for(pos = 30; pos <= 150; pos++){
+            servo.write(pos);
+            delay(delay_time);
+            if((pos % 10) == 0){
+              data_array[step][0] = pos;
+              data_array[step][1] = sonic_sensor.get_distance();
+              step++;
+            }
+          }  
+        }  else {
+          servo.write(150);
+          delay(delay_time*3);
+
+          for(pos = 150; pos >= 30; pos--){
+            servo.write(pos);
+            delay(delay_time);
+            if((pos % 10) == 0){
+              data_array[step][0] = pos;
+              data_array[step][1] = sonic_sensor.get_distance();
+              step++;
+            }
+          }
+        } 
+        //this->data_array = data_array;
+        return data_array;
+    }
+
+    void deconstruct_data_array(){
+      for (int i = 0; i < 13; ++i) {
+        delete[] this->data_array[i];
+      }
+        delete[] data_array;
+      }
+      
+
+  };
+
+
+
 class Car : IDrivable {
   public:
     String mode{};
-    SuperSonic sonic_sensor = SuperSonic();
     ServoMotor servo_motor = ServoMotor();
     Hbridge h_bruecke = Hbridge();
     LineTracking line_tracking_modul = LineTracking();
@@ -138,12 +177,36 @@ class Car : IDrivable {
       }
     }
 
+    void print_cords(){
+      int** data_array = servo_motor.get_cords();
+      for (int i = 0; i < 13; ++i) {
+        Serial.print("[");
+        Serial.print(i);
+        Serial.print("] Degrees: ");
+        Serial.print(data_array[i][0]);
+        Serial.print(" Distance: ");
+        Serial.print(data_array[i][1]);
+        Serial.println();
+    }
+      deconstruct_data_array(data_array);
+      //servo_motor.deconstruct_data_array();
+    }
+
   private:
+    int** data_array;
+
+    void deconstruct_data_array(int** data_array){
+      for (int i = 0; i < 13; ++i) {
+        delete[] data_array[i];
+    }
+        delete[] data_array;
+    }
     
 
     void drive(String direction) override {
       h_bruecke.drive_forward();
     }
+
   };
 
 
@@ -176,7 +239,8 @@ void setup() {
 void loop() {
   // put your main code here, to run repeatedly:
   if(!car.on_off){
-    car.start();
+    //car.start();
+    car.print_cords();
   }
   
 
