@@ -17,40 +17,161 @@
 #define infra_red 12
 #define bt_rx 0
 #define bt_tx 1
-#define bt_modul SoftwareSerial(bt_rx,bt_tx)
 int ls_rechts, ls_links, ls_mitte = 0;
+SoftwareSerial bt_modul = SoftwareSerial(bt_rx,bt_tx);
 
-class Hbridge{
-  // Speed kann zwischen 0 und 255 sein 0 => min; 255 => max
+class Hbridge {
+public:
+  void drive_forward(int speed = 200) {
+    motor_left_forward();
+    motor_right_forward();
+
+    analogWrite(h_br_en1, speed);
+    analogWrite(h_br_en2, 150);
+  }
+
+  void drive_backward(int speed = 200) {
+    Serial.println("Hier");
+    motor_left_backward();
+    motor_right_backward();
+
+    analogWrite(h_br_en1, speed);
+    analogWrite(h_br_en2, speed);
+  }
+
+  void stop() {
+    // Stop the motors by setting their enable pins to 0
+    analogWrite(h_br_en1, 0);
+    analogWrite(h_br_en2, 0);
+  }
+
+  void turn_right(int speed = 200) {
+    Serial.println("Rechts");
+    motor_left_forward();
+    motor_right_stop();
+
+    analogWrite(h_br_en1, speed);
+    analogWrite(h_br_en2, 0);
+    delay(2000);
+  }
+
+  void turn_right_90_degrees(int speed = 200) {
+    // Stop the car
+    stop();
+    
+    // Set the motors to turn right
+    digitalWrite(h_br_in1, LOW);
+    digitalWrite(h_br_in2, HIGH);
+    digitalWrite(h_br_in3, HIGH);
+    digitalWrite(h_br_in4, LOW);
+    analogWrite(h_br_en1, 125);
+    analogWrite(h_br_en2, 1);
+
+    // Adjust the delay time to make the car turn approximately 90 degrees
+    delay(3000); // Adjust as needed
+
+    // Stop the car after turning
+    stop();
+  }
+
+  void turn_left(int speed = 200) {
+    // Implement logic to turn left
+    // For example, stop left motor and move right motor forward
+    Serial.println("Links");
+    motor_left_stop();
+    motor_right_forward();
+
+    analogWrite(h_br_en1, 0);
+    analogWrite(h_br_en2, speed);
+    delay(2000);
+  }
+
+  void turn_left_90_degrees(int speed = 200) {
+    // Stop the car
+    stop();
+    
+    // Set the motors to left right
+    digitalWrite(h_br_in1, HIGH);
+    digitalWrite(h_br_in2, LOW);
+    digitalWrite(h_br_in3, LOW);
+    digitalWrite(h_br_in4, HIGH);
+    analogWrite(h_br_en1, 125);
+    analogWrite(h_br_en2, 1);
+
+    // Adjust the delay time to make the car turn approximately 90 degrees
+    delay(3000); // Adjust as needed
+
+    // Stop the car after turning
+    stop();
+  }
+
+private:
+  void motor_left_forward() {
+    digitalWrite(h_br_in1, HIGH);  // Motor 1 vor
+    digitalWrite(h_br_in2, LOW);
+  }
+
+  void motor_right_forward() {
+    digitalWrite(h_br_in3, LOW);  // Motor 1 vor
+    digitalWrite(h_br_in4, HIGH);
+  }
+
+  void motor_left_backward() {
+    digitalWrite(h_br_in1, LOW);  // Motor 1 rückwärts
+    digitalWrite(h_br_in2, HIGH);
+  }
+
+  void motor_right_backward() {
+    digitalWrite(h_br_in3, HIGH);  // Motor 1 rückwärts
+    digitalWrite(h_br_in4, LOW);
+  }
+
+  void motor_right_stop() {
+    digitalWrite(h_br_in3, LOW);  // Motor 1 vor
+    digitalWrite(h_br_in4, LOW);
+  }
+
+  void motor_left_stop() {
+    digitalWrite(h_br_in1, LOW);  // Motor 1 vor
+    digitalWrite(h_br_in2, LOW);
+  }
+};
+
+//gay nigger porn
+class LineTracking{
   public:
-    void drive_forward(int speed = 200){
-      analogWrite(h_br_en1, speed);
-      analogWrite(h_br_en2, speed);      
-      motor_left_forward();
-      motor_right_forward();
+    explicit LineTracking(Hbridge h_bridge){
+      this->h_bridge = h_bridge;
     }
 
+    void line_tracking(){
+      int left,middle,right;
+      get_sensor_vals(left,middle, right);
+      if(!left && !middle && !right){
+        //No line found
+        this->h_bridge.drive_forward();
+      } else if (!left && middle && !right) {
+        //Only line in middle
+        this->h_bridge.drive_forward();
+      }else if (left && middle && !right) {
+      //drive right
+        this->h_bridge.turn_right();
+      }else if (!left && middle && right) {
+      //drive left
+        this->h_bridge.turn_left();
+      }else if (left && !middle && !right) {
+      //drive right
+        this->h_bridge.turn_right();
+      }else if (!left && !middle && right) {
+      //drive left
+        this->h_bridge.turn_left();
+      }
 
+    }
 
   private:
+    Hbridge h_bridge;
 
-    void motor_left_forward(){
-      //en1 pin 6
-      digitalWrite(h_br_in1, HIGH);  // Motor 1 vor
-      digitalWrite(h_br_in2, LOW);
-
-    }
-
-      void motor_right_forward(){
-      digitalWrite(h_br_in3, LOW);  // Motor 1 vor
-      digitalWrite(h_br_in4, HIGH);
-
-    }
-
-};
-class LineTracking{
-
-  public:
     void get_sensor_vals(int &links,int &mitte,int &rechts){
       // Links, Mitte, Rechts
       links = !digitalRead(lt_links);
@@ -160,19 +281,23 @@ class Car : IDrivable {
     String mode{};
     ServoMotor servo_motor = ServoMotor();
     Hbridge h_bruecke = Hbridge();
-    LineTracking line_tracking_modul = LineTracking();
+    LineTracking line_tracking_modul = LineTracking(h_bruecke);
     bool on_off = false;
+    int** data_array;
 
 
     explicit Car(Servo new_servo) {
-      mode = "none";
+      mode = "line_tracking";
       this->servo_motor.set_servo(new_servo);
     }
 
     void start(){
       this->on_off = true;
       while(on_off){
-        //line_tracking_modul.get_sensor_vals(ls_links, ls_mitte, ls_rechts);
+        while(this->mode.equals("line_tracking")){
+          line_tracking_modul.line_tracking();
+          //Check for mode change
+        }
         
       }
     }
@@ -192,8 +317,6 @@ class Car : IDrivable {
       //servo_motor.deconstruct_data_array();
     }
 
-  private:
-    int** data_array;
 
     void deconstruct_data_array(int** data_array){
       for (int i = 0; i < 13; ++i) {
@@ -206,6 +329,7 @@ class Car : IDrivable {
     void drive(String direction) override {
       h_bruecke.drive_forward();
     }
+
 
   };
 
@@ -238,10 +362,8 @@ void setup() {
 
 void loop() {
   // put your main code here, to run repeatedly:
-  if(!car.on_off){
-    //car.start();
-    car.print_cords();
-  }
+  car.start();
+  
   
 
 }

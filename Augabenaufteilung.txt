@@ -7,6 +7,6 @@ Manuelles Fahren Programmieren: Jonas
 Automatisches Fahren mit Gegenstandserkennung: Kai
 Automatische Linienverfoglung Programmieren: Kai
 Kontroll Logik: Jonas
-Praesentation ca. 20 Seiten: 50/50
-Dokumentation min. 20 Seiten: 50/50
+Praesentation ca. 20 Seiten: Jonas
+Dokumentation min. 20 Seiten: 50/50 Kai + Jonas
  
