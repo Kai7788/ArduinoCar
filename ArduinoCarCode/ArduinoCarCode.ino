@@ -18,7 +18,7 @@
 #define bt_rx 0
 #define bt_tx 1
 int ls_rechts, ls_links, ls_mitte = 0;
-SoftwareSerial bt_modul = SoftwareSerial(bt_rx,bt_tx);
+SoftwareSerial bt_modul = SoftwareSerial(bt_rx,bt_tx); //Rx Tx
 
 class Hbridge {
 public:
@@ -31,7 +31,6 @@ public:
   }
 
   void drive_backward(int speed = 200) {
-    Serial.println("Hier");
     motor_left_backward();
     motor_right_backward();
 
@@ -46,7 +45,7 @@ public:
   }
 
   void turn_right(int speed = 200) {
-    Serial.println("Rechts");
+    //Serial.println("Rechts");
     motor_left_forward();
     motor_right_stop();
 
@@ -77,7 +76,7 @@ public:
   void turn_left(int speed = 200) {
     // Implement logic to turn left
     // For example, stop left motor and move right motor forward
-    Serial.println("Links");
+    //Serial.println("Links");
     motor_left_stop();
     motor_right_forward();
 
@@ -137,7 +136,7 @@ private:
   }
 };
 
-//gay nigger porn
+
 class LineTracking{
   public:
     explicit LineTracking(Hbridge h_bridge){
@@ -305,13 +304,13 @@ class Car : IDrivable {
     void print_cords(){
       int** data_array = servo_motor.get_cords();
       for (int i = 0; i < 13; ++i) {
-        Serial.print("[");
+       /* Serial.print("[");
         Serial.print(i);
         Serial.print("] Degrees: ");
         Serial.print(data_array[i][0]);
         Serial.print(" Distance: ");
         Serial.print(data_array[i][1]);
-        Serial.println();
+        Serial.println(); */
     }
       deconstruct_data_array(data_array);
       //servo_motor.deconstruct_data_array();
@@ -343,6 +342,7 @@ Car car(servo_motor);
 void setup() {
   // put your setup code here, to run once:
     Serial.begin(9600);
+    bt_modul.begin(9600);
     //SoftwareSerial.begin(9600);
     pinMode(lt_rechts, INPUT_PULLUP);
     pinMode(lt_mitte, INPUT_PULLUP);
@@ -357,13 +357,18 @@ void setup() {
     pinMode(ul_sonic_echo, INPUT_PULLUP);
     pinMode(ul_sonic_trig, OUTPUT);
     servo_motor.attach(servo_out);
-    bt_modul.begin(9600);
+    
 }
 
 void loop() {
   // put your main code here, to run repeatedly:
-  car.start();
-  
+  //car.start();
+  if(bt_modul.available()){
+    Serial.write(bt_modul.read());
+  }
+  if(Serial.available()){
+    bt_modul.write(Serial.read());
+  }
   
 
 }

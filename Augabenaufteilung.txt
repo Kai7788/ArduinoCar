@@ -1,12 +1,13 @@
 Ultraschall Sensor Programmieren: Jonas
-Servo Motor Programmieren: Kai
+Servo Motor Programmieren: Kai X
 H-Bruecke Programmieren: Jonas
 Bluetooth-Modul Programmieren: Kai
-Linien-Erkennung-Modul Programmieren: Kai
+Linien-Erkennung-Modul Programmieren: Kai X
 Manuelles Fahren Programmieren: Jonas
 Automatisches Fahren mit Gegenstandserkennung: Kai
-Automatische Linienverfoglung Programmieren: Kai
+Automatische Linienverfoglung Programmieren: Kai X
 Kontroll Logik: Jonas
+App zum Steuern: Jonas
 Praesentation ca. 20 Seiten: Jonas
 Dokumentation min. 20 Seiten: 50/50 Kai + Jonas
  
