@@ -316,6 +316,8 @@ class Car {
           infra_red_handler();
         }
         while (this->mode.equals("ausweichen")) {
+
+          //Funktion fuer das Automatisch Fahren mit Ausweichen hier einfuergen
           //ausweichen
           infra_red_handler();
         }
