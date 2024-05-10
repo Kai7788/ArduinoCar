@@ -1,5 +1,6 @@
 #include <Servo.h>
 #include <SoftwareSerial.h>
+#include <IRremote.h>
 
 
 #define lt_rechts 10 //Digital Input
@@ -18,7 +19,6 @@
 #define bt_rx 0
 #define bt_tx 1
 int ls_rechts, ls_links, ls_mitte = 0;
-SoftwareSerial bt_modul = SoftwareSerial(bt_rx,bt_tx); //Rx Tx
 
 class Hbridge {
 public:
@@ -339,10 +339,12 @@ Servo servo_motor;
 Car car(servo_motor);
 
 
+
 void setup() {
   // put your setup code here, to run once:
+    //delay(5000);
     Serial.begin(9600);
-    bt_modul.begin(9600);
+    IrReceiver.begin(infra_red);
     //SoftwareSerial.begin(9600);
     pinMode(lt_rechts, INPUT_PULLUP);
     pinMode(lt_mitte, INPUT_PULLUP);
@@ -361,14 +363,8 @@ void setup() {
 }
 
 void loop() {
-  // put your main code here, to run repeatedly:
-  //car.start();
-  if(bt_modul.available()){
-    Serial.write(bt_modul.read());
+    if (IrReceiver.decode()) {
+    IrReceiver.resume();
+    Serial.println(IrReceiver.decodedIRData.command);
+    }
   }
-  if(Serial.available()){
-    bt_modul.write(Serial.read());
-  }
-  
-
-}
