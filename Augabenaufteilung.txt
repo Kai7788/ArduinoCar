@@ -10,4 +10,4 @@ Kontroll Logik: Kai
 App zum Steuern: Jonas -> Kein HC-05 daher unnoetig
 Praesentation ca. 20 Seiten: Jonas
 Dokumentation min. 20 Seiten: Jonas
- 
+
