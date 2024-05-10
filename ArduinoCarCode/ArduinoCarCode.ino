@@ -25,7 +25,7 @@ enum class IR_VALUE{
   VOR         = 70,
   LINKS       = 68,
   RECHTS      = 67,
-  UNTEN       = 21,
+  ZURRUECK    = 21,
   OK          = 64,
   VAL_1       = 22,
   VAL_2       = 25,
@@ -68,11 +68,10 @@ public:
   void turn_right(int speed = 200) {
     //Serial.println("Rechts");
     motor_left_forward();
-    motor_right_stop();
+    motor_right_forward();
 
     analogWrite(h_br_en1, speed);
-    analogWrite(h_br_en2, 0);
-    delay(2000);
+    analogWrite(h_br_en2, speed/4);
   }
 
   void turn_right_90_degrees(int speed = 200) {
@@ -98,12 +97,11 @@ public:
     // Implement logic to turn left
     // For example, stop left motor and move right motor forward
     //Serial.println("Links");
-    motor_left_stop();
+    motor_left_forward();
     motor_right_forward();
 
-    analogWrite(h_br_en1, 0);
+    analogWrite(h_br_en1, speed/4);
     analogWrite(h_br_en2, speed);
-    delay(2000);
   }
 
   void turn_left_90_degrees(int speed = 200) {
@@ -297,11 +295,13 @@ class Car {
     LineTracking line_tracking_modul = LineTracking(h_bruecke);
     bool on_off = false;
     int** data_array;
+    String richtung{}; //WIRD FUER DEN MANUELLEN MODUS VERWENDET
 
 
     explicit Car(Servo new_servo) {
-      mode = "line_tracking";
+      mode = "manuell";
       this->servo_motor.set_servo(new_servo);
+      this->richtung = "STOP";
     }
 
     void start(){
@@ -312,7 +312,7 @@ class Car {
           infra_red_handler();
         }
         while (this->mode.equals("manuell")) {
-          //manuell
+          manuell();
           infra_red_handler();
         }
         while (this->mode.equals("ausweichen")) {
@@ -322,6 +322,22 @@ class Car {
         
       }
     }
+
+    void manuell(){
+      Serial.println(this->richtung);
+      if(this->richtung.equals("VOR")){
+        h_bruecke.drive_forward();
+      }else if (this->richtung.equals("ZURRUECK")) {
+        h_bruecke.drive_backward();
+      }else if (this->richtung.equals("RECHTS")) {
+        h_bruecke.turn_left();
+      }else if (this->richtung.equals("LINKS")) {
+        h_bruecke.turn_right();
+      }else {
+        h_bruecke.stop();
+      }
+    }
+
 
     void print_cords(){
       int** data_array = servo_motor.get_cords();
@@ -371,8 +387,22 @@ class Car {
             default:
               break;
             }
-        default:
-          break;
+          case IR_VALUE::VOR:
+            this->richtung = "VOR";
+            break;
+          case IR_VALUE::ZURRUECK:
+            this->richtung = "ZURRUECK";
+            break;
+          case IR_VALUE::RECHTS:
+            this->richtung = "RECHTS";
+            break;
+          case IR_VALUE::LINKS:
+            this->richtung = "LINKS";
+            break;
+          case IR_VALUE::OK:
+            this->richtung = "STOP";
+          default:
+            break;
         }
     }
   }}
