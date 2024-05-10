@@ -20,6 +20,27 @@
 #define bt_tx 1
 int ls_rechts, ls_links, ls_mitte = 0;
 
+enum class IR_VALUE{
+  NICHTS      = 0,
+  VOR         = 70,
+  LINKS       = 68,
+  RECHTS      = 67,
+  UNTEN       = 21,
+  OK          = 64,
+  VAL_1       = 22,
+  VAL_2       = 25,
+  VAL_3       = 13,
+  VAL_4       = 12,
+  VAL_5       = 24,
+  VAL_6       = 94,
+  VAL_7       = 8,
+  VAL_8       = 28,
+  VAL_9       = 90,
+  VAL_0       = 82,
+  STERN       = 66,
+  HASHTAG     = 74
+};
+
 class Hbridge {
 public:
   void drive_forward(int speed = 200) {
@@ -180,13 +201,6 @@ class LineTracking{
       return;
     }
 };
-class IDrivable{
-  public:
-      virtual ~IDrivable() = default;
-      virtual void drive(String) = 0;
-
-  };
-
 
 class SuperSonic{
 
@@ -275,7 +289,7 @@ class ServoMotor{
 
 
 
-class Car : IDrivable {
+class Car {
   public:
     String mode{};
     ServoMotor servo_motor = ServoMotor();
@@ -295,7 +309,15 @@ class Car : IDrivable {
       while(on_off){
         while(this->mode.equals("line_tracking")){
           line_tracking_modul.line_tracking();
-          //Check for mode change
+          infra_red_handler();
+        }
+        while (this->mode.equals("manuell")) {
+          //manuell
+          infra_red_handler();
+        }
+        while (this->mode.equals("ausweichen")) {
+          //ausweichen
+          infra_red_handler();
         }
         
       }
@@ -323,14 +345,38 @@ class Car : IDrivable {
     }
         delete[] data_array;
     }
-    
-
-    void drive(String direction) override {
-      h_bruecke.drive_forward();
+    void infra_red_handler(){
+      if (IrReceiver.decode()) {
+        IR_VALUE value = (IR_VALUE) IrReceiver.decodedIRData.command;
+        IrReceiver.resume();
+        switch (value) {
+          //Modus wechsel => # + 1/2/3
+          case IR_VALUE::HASHTAG:
+            while (!IrReceiver.decode()) {
+              continue;
+            }
+            switch ((IR_VALUE) IrReceiver.decodedIRData.command){
+              case IR_VALUE::VAL_1:
+              this->mode = "manuell";
+              Serial.println("manuell");
+              break;
+            case IR_VALUE::VAL_2:
+              this->mode = "ausweichen";
+              Serial.println("ausweichen");
+              break;
+            case IR_VALUE::VAL_3:
+              this->mode = "line_tracking";
+              Serial.println("line_tracking");
+              break;
+            default:
+              break;
+            }
+        default:
+          break;
+        }
     }
-
-
-  };
+  }}
+  ;
 
 
 
@@ -363,8 +409,5 @@ void setup() {
 }
 
 void loop() {
-    if (IrReceiver.decode()) {
-    IrReceiver.resume();
-    Serial.println(IrReceiver.decodedIRData.command);
-    }
+    car.start();
   }
