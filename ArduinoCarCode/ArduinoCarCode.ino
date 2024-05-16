@@ -41,6 +41,18 @@ enum class IR_VALUE{
   HASHTAG     = 74
 };
 
+enum class BT_VALUE{
+  VOR =         'f',
+  ZURRUECK =    'z',
+  RECHTS =      'r',
+  LINKS =       'l',
+  STOP =        's',
+  MANUELL =     'm',
+  TRACKING =    't',
+  AUTOMATIK =   'a'
+
+};
+
 class Hbridge {
 public:
   void drive_forward(int speed = 200) {
@@ -60,7 +72,6 @@ public:
   }
 
   void stop() {
-    // Stop the motors by setting their enable pins to 0
     analogWrite(h_br_en1, 0);
     analogWrite(h_br_en2, 0);
   }
@@ -184,6 +195,7 @@ class LineTracking{
       //drive left
         this->h_bridge.turn_left();
       }
+      delay(500);
 
     }
 
@@ -309,24 +321,24 @@ class Car {
       while(on_off){
         while(this->mode.equals("line_tracking")){
           line_tracking_modul.line_tracking();
-          infra_red_handler();
+          Serial.println("Hier");
+          bluetooth_handler();
         }
         while (this->mode.equals("manuell")) {
           manuell();
-          infra_red_handler();
+          bluetooth_handler();
         }
-        while (this->mode.equals("ausweichen")) {
+        while (this->mode.equals("automatik")) {
 
           //Funktion fuer das Automatisch Fahren mit Ausweichen hier einfuergen
-          //ausweichen
-          infra_red_handler();
+          //automatik
+          bluetooth_handler();
         }
         
       }
     }
 
     void manuell(){
-      Serial.println(this->richtung);
       if(this->richtung.equals("VOR")){
         h_bruecke.drive_forward();
       }else if (this->richtung.equals("ZURRUECK")) {
@@ -363,6 +375,44 @@ class Car {
     }
         delete[] data_array;
     }
+
+
+    void bluetooth_handler(){
+      if(Serial.available()){
+        BT_VALUE value = (BT_VALUE) Serial.read();
+        Serial.println((char) value);
+        switch (value) {
+          case BT_VALUE::VOR: 
+            this->richtung = "VOR"; 
+            break;
+          case BT_VALUE::ZURRUECK: 
+            this->richtung = "ZURRUECK";
+              break;
+          case BT_VALUE::LINKS: 
+            this->richtung = "LINKS";   
+            break;
+          case BT_VALUE::RECHTS: 
+            this->richtung = "RECHTS";  
+            break;
+          case BT_VALUE::STOP: 
+            this->richtung = "STOP";   
+            break;
+          case BT_VALUE::MANUELL: 
+            this->mode = "manuell"; 
+            break;
+          case BT_VALUE::AUTOMATIK:
+            this->mode = "automatik";
+            break;
+          case BT_VALUE::TRACKING:
+            this->mode = "line_tracking";
+            break;
+          default:  
+            break;
+        }
+      }
+    }
+
+
     void infra_red_handler(){
       if (IrReceiver.decode()) {
         IR_VALUE value = (IR_VALUE) IrReceiver.decodedIRData.command;
@@ -376,15 +426,12 @@ class Car {
             switch ((IR_VALUE) IrReceiver.decodedIRData.command){
               case IR_VALUE::VAL_1:
               this->mode = "manuell";
-              Serial.println("manuell");
               break;
             case IR_VALUE::VAL_2:
-              this->mode = "ausweichen";
-              Serial.println("ausweichen");
+              this->mode = "automatik";
               break;
             case IR_VALUE::VAL_3:
               this->mode = "line_tracking";
-              Serial.println("line_tracking");
               break;
             default:
               break;
