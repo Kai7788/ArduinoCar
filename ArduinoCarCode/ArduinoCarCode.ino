@@ -60,7 +60,7 @@ public:
     motor_right_forward();
 
     analogWrite(h_br_en1, speed);
-    analogWrite(h_br_en2, 150);
+    analogWrite(h_br_en2, speed * 0.75);
   }
 
   void drive_backward(int speed = 200) {
@@ -176,27 +176,26 @@ class LineTracking{
     void line_tracking(){
       int left,middle,right;
       get_sensor_vals(left,middle, right);
-      if(!left && !middle && !right){
-        //No line found
-        this->h_bridge.drive_forward();
-      } else if (!left && middle && !right) {
-        //Only line in middle
-        this->h_bridge.drive_forward();
-      }else if (left && middle && !right) {
-      //drive right
-        this->h_bridge.turn_right();
-      }else if (!left && middle && right) {
-      //drive left
-        this->h_bridge.turn_left();
-      }else if (left && !middle && !right) {
-      //drive right
-        this->h_bridge.turn_right();
-      }else if (!left && !middle && right) {
-      //drive left
-        this->h_bridge.turn_left();
-      }
-      delay(500);
-
+        if(middle){
+          Serial.println("Vor");
+          h_bridge.drive_forward(100);
+        }
+        else if(right) {
+          Serial.println("Rechts");
+          
+          while(right and !Serial.available()){
+            h_bridge.turn_right(100);
+            get_sensor_vals(left,middle, right);
+          };
+        }
+        else if(left) {
+          Serial.println("Links");
+          
+          while(left and !Serial.available()){
+            h_bridge.turn_left(100);
+            get_sensor_vals(left,middle, right);
+          };
+        }
     }
 
   private:
@@ -311,7 +310,7 @@ class Car {
 
 
     explicit Car(Servo new_servo) {
-      mode = "manuell";
+      mode = "line_tracking";
       this->servo_motor.set_servo(new_servo);
       this->richtung = "STOP";
     }
@@ -321,7 +320,6 @@ class Car {
       while(on_off){
         while(this->mode.equals("line_tracking")){
           line_tracking_modul.line_tracking();
-          Serial.println("Hier");
           bluetooth_handler();
         }
         while (this->mode.equals("manuell")) {
@@ -356,16 +354,16 @@ class Car {
     void print_cords(){
       int** data_array = servo_motor.get_cords();
       for (int i = 0; i < 13; ++i) {
-       /* Serial.print("[");
+        Serial.print("[");
         Serial.print(i);
         Serial.print("] Degrees: ");
         Serial.print(data_array[i][0]);
         Serial.print(" Distance: ");
         Serial.print(data_array[i][1]);
-        Serial.println(); */
+        Serial.println();
     }
       deconstruct_data_array(data_array);
-      //servo_motor.deconstruct_data_array();
+      servo_motor.deconstruct_data_array();
     }
 
 

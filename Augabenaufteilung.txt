@@ -1,13 +1,13 @@
 Ultraschall Sensor Programmieren: Kai X
 Servo Motor Programmieren: Kai X
 H-Bruecke Programmieren: Jonas
-Bluetooth-Modul Programmieren: Kai -> Infra Rot, da kein HC-05
+Bluetooth-Modul Programmieren: Kai X
 Linien-Erkennung-Modul Programmieren: Kai X
 Manuelles Fahren Programmieren: Kai X
 Automatisches Fahren mit Gegenstandserkennung: Jonas
 Automatische Linienverfoglung Programmieren: Kai 
 Kontroll Logik: Kai
-App zum Steuern: Jonas -> Kein HC-05 daher unnoetig
+App zum Steuern (Optional): Jonas 
 Praesentation ca. 20 Seiten: Jonas
 Dokumentation min. 20 Seiten: Jonas
 
