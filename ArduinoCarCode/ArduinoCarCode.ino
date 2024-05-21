@@ -85,7 +85,7 @@ public:
     analogWrite(h_br_en2, speed/4);
   }
 
-  void turn_right_90_degrees(int speed = 200) {
+  void turn_right_90_degrees(int speed = 125) {
     // Stop the car
     stop();
     
@@ -94,7 +94,7 @@ public:
     digitalWrite(h_br_in2, HIGH);
     digitalWrite(h_br_in3, HIGH);
     digitalWrite(h_br_in4, LOW);
-    analogWrite(h_br_en1, 125);
+    analogWrite(h_br_en1, speed);
     analogWrite(h_br_en2, 1);
 
     // Adjust the delay time to make the car turn approximately 90 degrees
@@ -115,7 +115,7 @@ public:
     analogWrite(h_br_en2, speed);
   }
 
-  void turn_left_90_degrees(int speed = 200) {
+  void turn_left_90_degrees(int speed = 125) {
     // Stop the car
     stop();
     
@@ -124,7 +124,7 @@ public:
     digitalWrite(h_br_in2, LOW);
     digitalWrite(h_br_in3, LOW);
     digitalWrite(h_br_in4, HIGH);
-    analogWrite(h_br_en1, 125);
+    analogWrite(h_br_en1, speed);
     analogWrite(h_br_en2, 1);
 
     // Adjust the delay time to make the car turn approximately 90 degrees
@@ -132,6 +132,22 @@ public:
 
     // Stop the car after turning
     stop();
+  }
+  
+  void spin_right(int speed = 150){
+    motor_right_forward();
+    motor_right_backward();
+
+    analogWrite(h_br_en1, speed);
+    analogWrite(h_br_en2, speed);
+  }
+
+  void spin_left(int speed = 150){
+    motor_left_backward();
+    motor_right_forward();
+
+    analogWrite(h_br_en1, speed);
+    analogWrite(h_br_en2, speed);
   }
 
 private:
@@ -174,38 +190,39 @@ class LineTracking{
     }
 
     void line_tracking(){
-      int left,middle,right;
-      get_sensor_vals(left,middle, right);
-        if(middle){
-          Serial.println("Vor");
-          h_bridge.drive_forward(100);
-        }
-        else if(right) {
-          Serial.println("Rechts");
-          
-          while(right and !Serial.available()){
-            h_bridge.turn_right(100);
-            get_sensor_vals(left,middle, right);
-          };
-        }
-        else if(left) {
-          Serial.println("Links");
-          
-          while(left and !Serial.available()){
-            h_bridge.turn_left(100);
-            get_sensor_vals(left,middle, right);
-          };
-        }
+      get_sensor_vals();
+      if (ls_mitte) {
+          h_bridge.drive_forward(150);
+      } else if (ls_rechts) {
+          h_bridge.spin_left();
+          // Keep turning until the right sensor no longer detects the line
+          while (ls_rechts) {
+            h_bridge.spin_left();
+            get_sensor_vals();
+          }
+          h_bridge.stop(); // Stop after turning
+      } else if (ls_links) {
+          h_bridge.spin_right();
+          // Keep turning until the left sensor no longer detects the line
+          while (ls_links) {
+            get_sensor_vals();
+            h_bridge.spin_right();
+          }
+          h_bridge.stop(); // Stop after turning
+      } else {
+          // If no line is detected, you may want to stop or perform a specific action
+          h_bridge.stop();
+      }
     }
 
   private:
     Hbridge h_bridge;
 
-    void get_sensor_vals(int &links,int &mitte,int &rechts){
+    void get_sensor_vals(){
       // Links, Mitte, Rechts
-      links = !digitalRead(lt_links);
-      mitte = !digitalRead(lt_mitte);
-      rechts = !digitalRead(lt_rechts);
+      ls_links = !digitalRead(lt_links);
+      ls_mitte = !digitalRead(lt_mitte);
+      ls_rechts = !digitalRead(lt_rechts);
       
       return;
     }
@@ -242,6 +259,10 @@ class ServoMotor{
       void set_servo(Servo new_servo){
           this->servo = new_servo;
           servo.write(start_pos);
+      }
+
+      int get_frontal_distance(){
+        return this->sonic_sensor.get_distance();
       }
 
       int** get_cords(int delay_time = 20){
@@ -327,7 +348,7 @@ class Car {
           bluetooth_handler();
         }
         while (this->mode.equals("automatik")) {
-
+          automatisches_fahren_mit_ausweichen();
           //Funktion fuer das Automatisch Fahren mit Ausweichen hier einfuergen
           //automatik
           bluetooth_handler();
@@ -335,6 +356,23 @@ class Car {
         
       }
     }
+private:
+
+    void automatisches_fahren_mit_ausweichen(int sicherheitsabstand = 20) {
+
+    int entfernung = this->servo_motor.get_frontal_distance();
+
+    if (entfernung < sicherheitsabstand) {
+        h_bruecke.drive_backward();
+        delay(2000); // 2 Sekunden warten
+        h_bruecke.stop(); // Anhalten
+        h_bruecke.turn_right_90_degrees(); // Nach rechts abbiegen
+        delay(1000); // 1 Sekunde warten
+        h_bruecke.stop(); // Anhalten
+        h_bruecke.drive_forward(); // Vorwärts fahren
+      }
+    
+  }
 
     void manuell(){
       if(this->richtung.equals("VOR")){
