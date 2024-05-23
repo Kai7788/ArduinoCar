@@ -331,7 +331,7 @@ class Car {
 
 
     explicit Car(Servo new_servo) {
-      mode = "line_tracking";
+      mode = "manuell";
       this->servo_motor.set_servo(new_servo);
       this->richtung = "STOP";
     }
@@ -370,6 +370,8 @@ private:
         delay(1000); // 1 Sekunde warten
         h_bruecke.stop(); // Anhalten
         h_bruecke.drive_forward(); // Vorwärts fahren
+      } else{
+        h_bruecke.drive_forward();
       }
     
   }
