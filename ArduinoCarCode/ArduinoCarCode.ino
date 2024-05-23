@@ -44,14 +44,18 @@ enum class IR_VALUE{
 
 enum class BT_VALUE{
   //Nachschlage Liste fuer Bluetooth werte
-  VOR =         'f',
-  ZURRUECK =    'z',
-  RECHTS =      'r',
-  LINKS =       'l',
-  STOP =        's',
-  MANUELL =     'm',
-  TRACKING =    't',
-  AUTOMATIK =   'a'
+  VOR =             'f',
+  VORLINKS =        'q',
+  VORRECHTS =       'e',
+  ZURRUECK =        'z',
+  ZURRUECKLINKS =   'x',
+  ZURRUECKRECHTS =  'c',
+  RECHTS =          'r',
+  LINKS =           'l',
+  STOP =            's',
+  MANUELL =         'm',
+  TRACKING =        't',
+  AUTOMATIK =       'a'
 
 };
 
@@ -73,7 +77,7 @@ public:
     motor_right_backward();
 
     analogWrite(h_br_en1, speed);
-    analogWrite(h_br_en2, speed);
+    analogWrite(h_br_en2, speed * 0.75);
   }
 
   void stop() {
@@ -87,8 +91,8 @@ public:
     motor_left_forward();
     motor_right_forward();
 
-    analogWrite(h_br_en1, speed);
-    analogWrite(h_br_en2, speed/4);
+    analogWrite(h_br_en1, speed/4);
+    analogWrite(h_br_en2, speed);
   }
 
   void turn_right_90_degrees(int speed = 125) {
@@ -113,6 +117,26 @@ public:
     motor_left_forward();
     motor_right_forward();
 
+    analogWrite(h_br_en1, speed);
+    analogWrite(h_br_en2, speed/4);
+  }
+
+  void turn_left_backward(int speed = 200) {
+    // Im bogen Links einbiegen
+
+    motor_left_backward();
+    motor_right_backward();
+
+    analogWrite(h_br_en1, speed);
+    analogWrite(h_br_en2, speed/4);
+  }
+
+  void turn_right_backward(int speed = 200) {
+    // Im bogen Links einbiegen
+
+    motor_left_backward();
+    motor_right_backward();
+
     analogWrite(h_br_en1, speed/4);
     analogWrite(h_br_en2, speed);
   }
@@ -132,19 +156,19 @@ public:
     stop();
   }
   
-  void spin_right(int speed = 150){
+  void spin_right(int speed = 200){
     // Auf der Stelle rechts drehen
     motor_right_forward();
-    motor_right_backward();
+    motor_left_backward();
 
     analogWrite(h_br_en1, speed);
     analogWrite(h_br_en2, speed);
   }
 
-  void spin_left(int speed = 150){
+  void spin_left(int speed = 200){
     // Auf der Stelle links drehen
-    motor_left_backward();
-    motor_right_forward();
+    motor_right_backward();
+    motor_left_forward();
 
     analogWrite(h_br_en1, speed);
     analogWrite(h_br_en2, speed);
@@ -201,19 +225,19 @@ class LineTracking{
       if (ls_mitte) {
           h_bridge.drive_forward(150);
       } else if (ls_rechts) {
-          h_bridge.spin_left();
+          h_bridge.spin_right();
           
           while (ls_rechts) {
-            h_bridge.spin_left();
+            h_bridge.spin_right();
             get_sensor_vals();
           }
           h_bridge.stop(); 
       } else if (ls_links) {
-          h_bridge.spin_right();
+          h_bridge.spin_left();
           
           while (ls_links) {
             get_sensor_vals();
-            h_bridge.spin_right();
+            h_bridge.spin_left();
           }
           h_bridge.stop(); 
       } else {
@@ -389,13 +413,24 @@ private:
     void manuell(){
       //Funktion fuer den Manuellen Modus
       if(this->richtung.equals("VOR")){
-        h_bruecke.drive_forward();
+        h_bruecke.drive_forward(255);
+      }else if (this->richtung.equals("VORRECHTS")) {
+        h_bruecke.turn_right(255);
+      }else if (this->richtung.equals("VORLINKS")) {
+        h_bruecke.turn_left(255);
       }else if (this->richtung.equals("ZURRUECK")) {
-        h_bruecke.drive_backward();
-      }else if (this->richtung.equals("RECHTS")) {
-        h_bruecke.turn_left();
+        h_bruecke.drive_backward(255);
+      }else if (this->richtung.equals("ZURRUECKLINKS")) {
+        h_bruecke.turn_left_backward(255);
+      }else if (this->richtung.equals("ZURRUECKRECHTS")) {
+        h_bruecke.turn_right_backward(255);
+      }
+      
+      else if (this->richtung.equals("RECHTS")) {
+        h_bruecke.spin_right(255);
       }else if (this->richtung.equals("LINKS")) {
-        h_bruecke.turn_right();
+        h_bruecke.spin_left(255
+        );
       }else {
         h_bruecke.stop();
       }
@@ -432,11 +467,23 @@ private:
           case BT_VALUE::VOR: 
             this->richtung = "VOR"; 
             break;
+          case BT_VALUE::VORLINKS:
+            this->richtung = "VORLINKS";
+            break;
+          case BT_VALUE::VORRECHTS:
+            this->richtung = "VORRECHTS";
+            break;
           case BT_VALUE::ZURRUECK: 
             this->richtung = "ZURRUECK";
               break;
           case BT_VALUE::LINKS: 
             this->richtung = "LINKS";   
+            break;
+          case BT_VALUE::ZURRUECKLINKS: 
+            this->richtung = "ZURRUECKLINKS";   
+            break;
+          case BT_VALUE::ZURRUECKRECHTS: 
+            this->richtung = "ZURRUECKRECHTS";   
             break;
           case BT_VALUE::RECHTS: 
             this->richtung = "RECHTS";  
