@@ -21,6 +21,7 @@
 int ls_rechts, ls_links, ls_mitte = 0;
 
 enum class IR_VALUE{
+  // Nachschlage Liste fuer Infrarot werte
   NICHTS      = 0,
   VOR         = 70,
   LINKS       = 68,
@@ -42,6 +43,7 @@ enum class IR_VALUE{
 };
 
 enum class BT_VALUE{
+  //Nachschlage Liste fuer Bluetooth werte
   VOR =         'f',
   ZURRUECK =    'z',
   RECHTS =      'r',
@@ -54,8 +56,10 @@ enum class BT_VALUE{
 };
 
 class Hbridge {
+  //H-Bruecken Klasse, um das Steuern der Motoren zu vereinfachen
 public:
   void drive_forward(int speed = 200) {
+    //Funktion zum Vorwaertsfahren
     motor_left_forward();
     motor_right_forward();
 
@@ -64,6 +68,7 @@ public:
   }
 
   void drive_backward(int speed = 200) {
+    //Funktion zum Rueckwertsfahren
     motor_left_backward();
     motor_right_backward();
 
@@ -72,12 +77,13 @@ public:
   }
 
   void stop() {
+    //Funktion zum Stoppen der Motoren
     analogWrite(h_br_en1, 0);
     analogWrite(h_br_en2, 0);
   }
 
   void turn_right(int speed = 200) {
-    //Serial.println("Rechts");
+    // Im bogen rechts einbiegen
     motor_left_forward();
     motor_right_forward();
 
@@ -86,10 +92,9 @@ public:
   }
 
   void turn_right_90_degrees(int speed = 125) {
-    // Stop the car
+    // Faehrt im Bogen 90 grad rueckwerts
     stop();
-    
-    // Set the motors to turn right
+
     digitalWrite(h_br_in1, LOW);
     digitalWrite(h_br_in2, HIGH);
     digitalWrite(h_br_in3, HIGH);
@@ -97,17 +102,14 @@ public:
     analogWrite(h_br_en1, speed);
     analogWrite(h_br_en2, 1);
 
-    // Adjust the delay time to make the car turn approximately 90 degrees
     delay(3000); // Adjust as needed
 
-    // Stop the car after turning
     stop();
   }
 
   void turn_left(int speed = 200) {
-    // Implement logic to turn left
-    // For example, stop left motor and move right motor forward
-    //Serial.println("Links");
+    // Im bogen Links einbiegen
+
     motor_left_forward();
     motor_right_forward();
 
@@ -116,10 +118,8 @@ public:
   }
 
   void turn_left_90_degrees(int speed = 125) {
-    // Stop the car
+    // Faehrt im Bogen 90 grad rueckwerts
     stop();
-    
-    // Set the motors to left right
     digitalWrite(h_br_in1, HIGH);
     digitalWrite(h_br_in2, LOW);
     digitalWrite(h_br_in3, LOW);
@@ -127,14 +127,13 @@ public:
     analogWrite(h_br_en1, speed);
     analogWrite(h_br_en2, 1);
 
-    // Adjust the delay time to make the car turn approximately 90 degrees
     delay(3000); // Adjust as needed
 
-    // Stop the car after turning
     stop();
   }
   
   void spin_right(int speed = 150){
+    // Auf der Stelle rechts drehen
     motor_right_forward();
     motor_right_backward();
 
@@ -143,6 +142,7 @@ public:
   }
 
   void spin_left(int speed = 150){
+    // Auf der Stelle links drehen
     motor_left_backward();
     motor_right_forward();
 
@@ -152,73 +152,80 @@ public:
 
 private:
   void motor_left_forward() {
+    //Motor links vorwaerts
     digitalWrite(h_br_in1, HIGH);  // Motor 1 vor
     digitalWrite(h_br_in2, LOW);
   }
 
   void motor_right_forward() {
+    //Motor rechts vorwaerts
     digitalWrite(h_br_in3, LOW);  // Motor 1 vor
     digitalWrite(h_br_in4, HIGH);
   }
 
   void motor_left_backward() {
+    //Motor links rueckwaerts
     digitalWrite(h_br_in1, LOW);  // Motor 1 rückwärts
     digitalWrite(h_br_in2, HIGH);
   }
 
   void motor_right_backward() {
+    //Motor rechts rueckwerts
     digitalWrite(h_br_in3, HIGH);  // Motor 1 rückwärts
     digitalWrite(h_br_in4, LOW);
   }
 
   void motor_right_stop() {
+    //Motor rechts stoppen
     digitalWrite(h_br_in3, LOW);  // Motor 1 vor
     digitalWrite(h_br_in4, LOW);
   }
 
   void motor_left_stop() {
+    // Motor links stoppen
     digitalWrite(h_br_in1, LOW);  // Motor 1 vor
     digitalWrite(h_br_in2, LOW);
   }
 };
 
-
 class LineTracking{
+  // Linetracking Modul, um das Steuern zu vereinfachen
   public:
     explicit LineTracking(Hbridge h_bridge){
       this->h_bridge = h_bridge;
     }
 
     void line_tracking(){
+      //Linetracking Funktion
       get_sensor_vals();
       if (ls_mitte) {
           h_bridge.drive_forward(150);
       } else if (ls_rechts) {
           h_bridge.spin_left();
-          // Keep turning until the right sensor no longer detects the line
+          
           while (ls_rechts) {
             h_bridge.spin_left();
             get_sensor_vals();
           }
-          h_bridge.stop(); // Stop after turning
+          h_bridge.stop(); 
       } else if (ls_links) {
           h_bridge.spin_right();
-          // Keep turning until the left sensor no longer detects the line
+          
           while (ls_links) {
             get_sensor_vals();
             h_bridge.spin_right();
           }
-          h_bridge.stop(); // Stop after turning
+          h_bridge.stop(); 
       } else {
-          // If no line is detected, you may want to stop or perform a specific action
+          
           h_bridge.stop();
       }
     }
 
   private:
-    Hbridge h_bridge;
-
+    Hbridge h_bridge; // Benoetig Zugriff auf die H-Bruecke zum steuern der Motoren
     void get_sensor_vals(){
+      //Die Aktuellen Sensorwerte einlesen
       // Links, Mitte, Rechts
       ls_links = !digitalRead(lt_links);
       ls_mitte = !digitalRead(lt_mitte);
@@ -228,11 +235,11 @@ class LineTracking{
     }
 };
 
-class SuperSonic{
+class SuperSonic{ // Klasse fuer den Ultraschall sensor zum vereinfachen der Steuerung
 
   public:
-      int get_distance(){
-          //Returns the Distance in mm
+      int get_distance(){ 
+          // Funktion zum erhalten des Frontralen abstand in mm 
           digitalWrite(ul_sonic_trig, LOW);
           delayMicroseconds(2);
           digitalWrite(ul_sonic_trig, HIGH);
@@ -244,12 +251,11 @@ class SuperSonic{
 
   };
 
-
-class ServoMotor{
+class ServoMotor{ // Klasse zur vereinfachten Steuerung des Servo motors
   private:
-      Servo servo;
+      Servo servo; // Zugriff auf den Servo motor
       int start_pos = 90; //Standard position 90 degrees
-      SuperSonic sonic_sensor = SuperSonic();
+      SuperSonic sonic_sensor = SuperSonic(); // Zugriff auf den Ultraschall sensor 
       int min_pos = 30;
       int max_pos = 150;
       int pos = 90;
@@ -257,24 +263,25 @@ class ServoMotor{
 
   public:
       void set_servo(Servo new_servo){
+          // Funktion zum setzen des Servos
           this->servo = new_servo;
-          servo.write(start_pos);
+          servo.write(start_pos); // Standart Position anfahren
       }
 
       int get_frontal_distance(){
+        // Erhalten des Frontalen abstand, da die get_distance() Funktion Privat ist
         return this->sonic_sensor.get_distance();
       }
 
       int** get_cords(int delay_time = 20){
-        // Returns an Array with the cordinates exmp. [[80,40],[70,44],[60, 55]]
-        // Coardinate array -> Inner array [degrees, distance]
-        // Left is > 90 and right is < 90
+        // Erstellen eines 2D Arrays, um die Postionen zu erfassen bsp: [[80,40],[70,44],[60, 55]]
+        //                                                              [[Grad, Abstand],[Grad, Abstand],[Grad,Abstand]...]
         int entries = 13;
         int step = 0;
-        int** data_array = new int*[entries]; // Creates the outer array [12] with 12 spaces
+        int** data_array = new int*[entries]; // Das grosses Array fuer 12  Eintraege erstellen
 
         for (int i = 0; i < entries; ++i) {
-          data_array[i] = new int[2];        // Creates the inner arrays [[2], [2], [2]...] -> [degrees, value]
+          data_array[i] = new int[2];        // Innere Arrays Erstellen [[2], [2], [2]...] -> [Grad, Wert]
         }
         if(pos < 90){
           servo.write(30);
@@ -303,11 +310,11 @@ class ServoMotor{
             }
           }
         } 
-        //this->data_array = data_array;
         return data_array;
     }
 
     void deconstruct_data_array(){
+      // Funktion zum Freigeben des Speichers nach nutzung des get_Cords Arrays
       for (int i = 0; i < 13; ++i) {
         delete[] this->data_array[i];
       }
@@ -317,66 +324,70 @@ class ServoMotor{
 
   };
 
-
-
-class Car {
+class Car { // Klasse zum Steuern des Autos zum vereinfachen der Steuerung
   public:
-    String mode{};
-    ServoMotor servo_motor = ServoMotor();
-    Hbridge h_bruecke = Hbridge();
-    LineTracking line_tracking_modul = LineTracking(h_bruecke);
-    bool on_off = false;
-    int** data_array;
+    String mode{}; // Modus wie z.b 'manuell'
+    ServoMotor servo_motor = ServoMotor(); //Servo Motor Initialisieren
+    Hbridge h_bruecke = Hbridge(); // H-Bruecke Initialisieren
+    LineTracking line_tracking_modul = LineTracking(h_bruecke); // LineTracking Modul Initialisieren
+    bool on_off = false; // Auto An/Aus Schalten
+    int** data_array; // Platzhalter fuer die get_cords() Funktion aus dem Servo Motor
     String richtung{}; //WIRD FUER DEN MANUELLEN MODUS VERWENDET
 
 
     explicit Car(Servo new_servo) {
+      // Konstruktor der Klasse
       mode = "manuell";
       this->servo_motor.set_servo(new_servo);
       this->richtung = "STOP";
     }
 
-    void start(){
+    void start(){ // Funktion zum Starten des Autos bzw. unser Main Loop
       this->on_off = true;
       while(on_off){
+        //Verschiedene Modis Starten
         while(this->mode.equals("line_tracking")){
+          //Linetracking starten
           line_tracking_modul.line_tracking();
+          // Schauen, ob es veraenderungen im Bluetooth Modul gibt, wie z.b neue Daten im Buffer
           bluetooth_handler();
         }
         while (this->mode.equals("manuell")) {
+          //Manuell starten
           manuell();
+          // Schauen, ob es veraenderungen im Bluetooth Modul gibt, wie z.b neue Daten im Buffer
           bluetooth_handler();
         }
         while (this->mode.equals("automatik")) {
+          //Automatik starten
           automatisches_fahren_mit_ausweichen();
-          //Funktion fuer das Automatisch Fahren mit Ausweichen hier einfuergen
-          //automatik
+          // Schauen, ob es veraenderungen im Bluetooth Modul gibt, wie z.b neue Daten im Buffer
           bluetooth_handler();
         }
         
       }
     }
+
 private:
 
     void automatisches_fahren_mit_ausweichen(int sicherheitsabstand = 20) {
-
-    int entfernung = this->servo_motor.get_frontal_distance();
-
-    if (entfernung < sicherheitsabstand) {
-        h_bruecke.drive_backward();
-        delay(2000); // 2 Sekunden warten
-        h_bruecke.stop(); // Anhalten
-        h_bruecke.turn_right_90_degrees(); // Nach rechts abbiegen
-        delay(1000); // 1 Sekunde warten
-        h_bruecke.stop(); // Anhalten
-        h_bruecke.drive_forward(); // Vorwärts fahren
-      } else{
-        h_bruecke.drive_forward();
-      }
-    
+      //Funktion fuer den Automatik modus
+      int entfernung = this->servo_motor.get_frontal_distance();
+      if (entfernung < sicherheitsabstand) {
+          h_bruecke.drive_backward();
+          delay(2000); // 2 Sekunden warten
+          h_bruecke.stop(); // Anhalten
+          h_bruecke.turn_right_90_degrees(); // Nach rechts abbiegen
+          delay(1000); // 1 Sekunde warten
+          h_bruecke.stop(); // Anhalten
+          h_bruecke.drive_forward(); // Vorwärts fahren
+        } else{
+          h_bruecke.drive_forward();
+        }
   }
 
     void manuell(){
+      //Funktion fuer den Manuellen Modus
       if(this->richtung.equals("VOR")){
         h_bruecke.drive_forward();
       }else if (this->richtung.equals("ZURRUECK")) {
@@ -390,8 +401,8 @@ private:
       }
     }
 
-
     void print_cords(){
+      // Funtion zum Printen der Aktuellen Koordinaten im Umkreis
       int** data_array = servo_motor.get_cords();
       for (int i = 0; i < 13; ++i) {
         Serial.print("[");
@@ -406,7 +417,6 @@ private:
       servo_motor.deconstruct_data_array();
     }
 
-
     void deconstruct_data_array(int** data_array){
       for (int i = 0; i < 13; ++i) {
         delete[] data_array[i];
@@ -414,12 +424,11 @@ private:
         delete[] data_array;
     }
 
-
     void bluetooth_handler(){
-      if(Serial.available()){
+      // Funktion zum Handlen von Bluetooth Modul
+      if(Serial.available()){ // Wenn Etwas im Buffer steht
         BT_VALUE value = (BT_VALUE) Serial.read();
-        Serial.println((char) value);
-        switch (value) {
+        switch (value) { // Kontroll Logik
           case BT_VALUE::VOR: 
             this->richtung = "VOR"; 
             break;
@@ -450,12 +459,13 @@ private:
       }
     }
 
-
     void infra_red_handler(){
-      if (IrReceiver.decode()) {
+      // Funktion zur Kontrolle via Infrarot
+      if (IrReceiver.decode())// Wenn etwas im Infrarot buffer steht
+       {
         IR_VALUE value = (IR_VALUE) IrReceiver.decodedIRData.command;
         IrReceiver.resume();
-        switch (value) {
+        switch (value) { // Kontroll Logik
           //Modus wechsel => # + 1/2/3
           case IR_VALUE::HASHTAG:
             while (!IrReceiver.decode()) {
@@ -495,20 +505,12 @@ private:
   }}
   ;
 
-
-
-
 Servo servo_motor;
 Car car(servo_motor);
 
-
-
 void setup() {
-  // put your setup code here, to run once:
-    //delay(5000);
     Serial.begin(9600);
     IrReceiver.begin(infra_red);
-    //SoftwareSerial.begin(9600);
     pinMode(lt_rechts, INPUT_PULLUP);
     pinMode(lt_mitte, INPUT_PULLUP);
     pinMode(lt_links, INPUT_PULLUP);
