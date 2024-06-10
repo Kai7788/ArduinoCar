@@ -1,5 +1,4 @@
 #include <Servo.h>
-#include <SoftwareSerial.h>
 #include <IRremote.h>
 
 
